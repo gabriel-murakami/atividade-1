@@ -29,7 +29,7 @@ Quando o jogador fizer um palpite, o mesmo passa por algumas validações:
 - Primeiro o palpite é normalizado para minúscula
 - É verificado se o mesmo não é algo além de uma letra
 - Então, a palavra é iterada para encontrar se há correspondência de letra. Se houver, a posição no array de revelação é setado com true
-- Caso contrário, a limite máximo de erros é decrementado e o jogo continua
+- Caso contrário, o limite máximo de erros é decrementado e o jogo continua
 
 A cada palpite é rodado a função de verificação do estado do jogo. Onde ele confere ou se a palavra está completamente revelada (vitória), ou se
 o número máximo de erros chegou a zero (derrota). Se nenhum dos dois for satisfeito o jogo continua.
