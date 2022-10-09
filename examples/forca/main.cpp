@@ -7,7 +7,7 @@ int main(int argc, char **argv) {
     Window window;
     window.resetWord();
     window.setWindowSettings(
-      {.width = 600, .height = 600, .title = "Jogo da Memória"});
+      {.width = 600, .height = 600, .title = "Forca"});
 
     app.run(window);
   } catch (std::exception const &exception) {

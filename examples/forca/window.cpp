@@ -4,27 +4,26 @@
 void Window::onCreate() {
   auto const filename{abcg::Application::getAssetsPath() + "Roboto-Medium.ttf"};
 
+  auto const appWindowWidth{gsl::narrow<float>(getWindowSettings().width)};
+
   m_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(filename.c_str(), 32.0f);
 
   if (m_font == nullptr) {
     throw abcg::RuntimeError{"Cannot load font file"};
   }
 
-  restartGame();
+  restartGame("Fácil");
 }
 
-void Window::restartGame() {
-  // m_board.fill('\0');
-  resetWord();
+void Window::restartGame(string difficult) {
+  resetWord(difficult);
   m_gameState = GameState::Play;
 }
 
 void Window::onPaintUI() {
-  // Get size of application's window
   auto const appWindowWidth{gsl::narrow<float>(getWindowSettings().width)};
   auto const appWindowHeight{gsl::narrow<float>(getWindowSettings().height)};
 
-  // "Forca" window
   {
     ImGui::SetNextWindowSize(ImVec2(appWindowWidth, appWindowHeight));
     ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -33,41 +32,37 @@ void Window::onPaintUI() {
 
     ImGui::Begin("Forca", nullptr, flags);
 
-    // TODO: Add static text showing current turn or win/draw messages
     {
       std::string text;
+      auto color = IM_COL32(255, 255, 255, 255);
       switch (m_gameState) {
       case GameState::Play:
-        text = fmt::format("Escolha uma letra");
+        text = fmt::format("[{}] Tente adivinhar a seguinte palavra:", getCurrentDifficult());
         break;
       case GameState::Lose:
-        text = "Você perdeu!";
+        color = IM_COL32(255, 0, 0, 255);
+        text = "Você perdeu :(";
         break;
       case GameState::Win:
-        text = "Parabéns!";
+        color = IM_COL32(0, 255, 0, 255);
+        text = "Parabéns :)";
         break;
       }
       // Center text
+      ImGui::PushStyleColor(ImGuiCol_Text, color);
       ImGui::SetCursorPosX((appWindowWidth - ImGui::CalcTextSize(text.c_str()).x) / 2);
       ImGui::Text("%s", text.c_str());
-
-      if (m_gameState == GameState::Play) {
-        std::string tryText = "Tentativas restantes: " + std::to_string(maxError);
-        ImGui::SetCursorPosX((appWindowWidth - ImGui::CalcTextSize(tryText.c_str()).x) / 2);
-        ImGui::Text("%s", tryText.c_str());
-      }
+      ImGui::PopStyleColor();
 
       ImGui::Spacing();
     }
 
     ImGui::Spacing();
-    // TODO: Add game board
 
     {
-      // Use custom font
       ImGui::PushFont(m_font);
 
-      for (int i = 0; i < strlen(getWord()); i++) {
+      for (size_t i = 0; i < strlen(getWord()); i++) {
         auto ch{getWord()[i]};
 
         if (ch != 0) {
@@ -77,7 +72,7 @@ void Window::onPaintUI() {
 
           auto buttonText{fmt::format("{}##{}", ch, 0)};
 
-          ImGui::Button(buttonText.c_str(), ImVec2(50, 50));
+          ImGui::Button(buttonText.c_str(), ImVec2(40, 40));
           ImGui::SameLine();
         }
       }
@@ -91,43 +86,83 @@ void Window::onPaintUI() {
 
     if (m_gameState == GameState::Play) {
       char guess = '\0';
-      bool successGuess = true;
 
-      // ImGui::SetKeyboardFocusHere(0);
       {
         if (!ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0))
           ImGui::SetKeyboardFocusHere(0);
         if (ImGui::InputText("##Guess", &guess, 2, ImGuiInputTextFlags_EnterReturnsTrue)) {
-          successGuess = makeGuess(guess);
+          makeGuess(guess);
           checkEndCondition();
           guess = '\0';
         }
-        ImGui::SameLine();
-        // if (ImGui::Button("Enviar")) {
-        //   makeGuess(guess);
-        //   checkEndCondition();
-        //   guess = ' ';
-        // }
 
-        if (!successGuess) {
+        if (m_gameState == GameState::Play) {
+          std::string tryText = "Palpites errados restantes: " + std::to_string(maxError);
+          ImGui::SetCursorPosX((appWindowWidth - ImGui::CalcTextSize(tryText.c_str()).x) / 2);
+          ImGui::Text("%s", tryText.c_str());
+        }
+
+        if (getErrorGuess()) {
           ImGui::Spacing();
           ImGui::Spacing();
           ImGui::Spacing();
 
-          std::string text = "Letra repetida!! Tente novamente";
+          ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
+          std::string text = "Palpite errado!";
           ImGui::SetCursorPosX((appWindowWidth - ImGui::CalcTextSize(text.c_str()).x) / 2);
           ImGui::Text("%s", text.c_str());
+          ImGui::PopStyleColor();
+        }
+
+
+        if (getRepeatedGuess()) {
+          ImGui::Spacing();
+          ImGui::Spacing();
+          ImGui::Spacing();
+
+          ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 0, 255));
+          std::string text = "Palpite repetido!";
+          ImGui::SetCursorPosX((appWindowWidth - ImGui::CalcTextSize(text.c_str()).x) / 2);
+          ImGui::Text("%s", text.c_str());
+          ImGui::PopStyleColor();
+        }
+
+
+        if (!isalpha(getCurrentGuess()) && getCurrentGuess() != '\0') {
+          ImGui::Spacing();
+          ImGui::Spacing();
+          ImGui::Spacing();
+
+          ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 0, 255));
+          std::string text = "O palpite deve ser uma letra!";
+          ImGui::SetCursorPosX((appWindowWidth - ImGui::CalcTextSize(text.c_str()).x) / 2);
+          ImGui::Text("%s", text.c_str());
+          ImGui::PopStyleColor();
         }
       }
     }
 
+
     ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Spacing();
 
-    if (ImGui::Button("Começar uma nova partida", ImVec2(-1, 30))) {
-      restartGame();
+    std::string text = "Começar uma nova partida:";
+    ImGui::SetCursorPosX((appWindowWidth - ImGui::CalcTextSize(text.c_str()).x) / 2);
+    ImGui::Text("%s", text.c_str());
+
+    if (ImGui::Button("Fácil", ImVec2((appWindowWidth / 3) - 5, 30))) {
+      restartGame("Fácil");
     }
+    ImGui::SameLine();
+    if (ImGui::Button("Médio", ImVec2((appWindowWidth / 3) - 5, 30))) {
+      restartGame("Médio");
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Difícil", ImVec2((appWindowWidth / 3) - 5, 30))) {
+      restartGame("Difícil");
+    }
+    ImGui::SameLine();
 
     ImGui::Spacing();
 
@@ -142,7 +177,7 @@ void Window::checkEndCondition() {
 
   bool winGame{true};
 
-  for (int i = 0; i < strlen(m_word); i++) {
+  for (size_t i = 0; i < strlen(m_word); i++) {
     if (m_revealed[i] == false) {
       winGame = false;
     }

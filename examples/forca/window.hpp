@@ -2,6 +2,7 @@
 #define WINDOW_HPP_
 
 #include "abcgOpenGL.hpp"
+using namespace std;
 
 class Window : public abcg::OpenGLWindow {
 protected:
@@ -13,40 +14,87 @@ private:
   GameState m_gameState;
   ImFont *m_font{};
 
-  char* words[3] = {"cachorro", "gato", "flamingo"};
+  char* easy_words[5] = {"adorno", "casual", "hostil", "isento", "exceto"};
+  char* medium_words[5] = {"eminente", "reiterar", "alienado", "complexo", "prudente"};
+  char* hard_words[5] = {"prescindir", "diligencia", "intemperie", "corroborar", "incipiente"};
+
   char* m_word = new char[100];
   bool* m_revealed = new bool[100];
   int maxError{5};
 
   char* guessedChars = new char[100];
 
+  char currentGuess = '\0';
+  char repeatedGuess = false;
+  char errorGuess = false;
+  string currentDificult = "Fácil";
+
   void checkEndCondition();
-  void restartGame();
+  void restartGame(string difficult);
 
 public:
   char* getWord() {
     return m_word;
   }
 
+  char* getGuessed() {
+    return guessedChars;
+  }
+
   bool* getRevealed() {
     return m_revealed;
   }
 
-  void resetWord() {
-    int randIndex = rand() % (sizeof(words) / sizeof(char*));
-    char* selectedWord = words[randIndex];
+  void setGuessed(int i, char value) {
+    guessedChars[i] = value;
+  }
+
+  char getCurrentGuess() {
+    return currentGuess;
+  }
+
+  char getRepeatedGuess() {
+    return repeatedGuess;
+  }
+
+  char getErrorGuess() {
+    return errorGuess;
+  }
+
+  string getCurrentDifficult() {
+    return currentDificult;
+  }
+
+  void resetWord(string difficult = "Fácil") {
+    char* selectedWord;
+
+    currentDificult = difficult;
+
+    if (difficult == "Fácil") {
+      int randIndex = rand() % (sizeof(easy_words) / sizeof(char*));
+      selectedWord = easy_words[randIndex];
+    } else if (difficult == "Médio") {
+      int randIndex = rand() % (sizeof(medium_words) / sizeof(char*));
+      selectedWord = medium_words[randIndex];
+    } else {
+      int randIndex = rand() % (sizeof(hard_words) / sizeof(char*));
+      selectedWord = hard_words[randIndex];
+    }
 
     m_word = selectedWord;
 
     maxError = 5;
+    currentGuess = '\0';
+    repeatedGuess = false;
+    errorGuess = false;
 
     resetRevelead();
     resetGuessed();
   }
 
   void resetGuessed() {
-    for (size_t i = 0; i < strlen(guessedChars); i++) {
-      guessedChars[i] = '\0';
+    for (size_t i = 0; i < strlen(getGuessed()); i++) {
+      getGuessed()[i] = '\0';
     }
   }
 
@@ -56,13 +104,28 @@ public:
     }
   }
 
-  bool makeGuess(char guess) {
+  void makeGuess(char value) {
     bool anyHits = false;
+    errorGuess = false;
+    repeatedGuess = false;
 
-    for (size_t i = 0; i < strlen(guessedChars); i++) {
-      if (guessedChars[i] == guess) {
-        return false;
-      } else if (guessedChars[i] == '\0') {
+    if (!isalpha(value)) {
+      currentGuess = value;
+      return;
+    }
+
+    char guess = tolower(value);
+
+    currentGuess = guess;
+
+    for (size_t i = 0; i < strlen(getGuessed()); i++) {
+      if (getGuessed()[i] == guess) {
+        return;
+      }
+    }
+
+    for (size_t i = 0; i < strlen(getGuessed()); i++) {
+      if (getGuessed()[i] == '\0') {
         guessedChars[i] = guess;
         break;
       }
@@ -70,15 +133,20 @@ public:
 
     for (size_t i = 0; i < strlen(m_word); i++) {
       if (m_word[i] == guess) {
-        m_revealed[i] = true;
-        anyHits = true;
+        if (m_revealed[i]) {
+          repeatedGuess = true;
+          anyHits = true;
+        } else {
+          m_revealed[i] = true;
+          anyHits = true;
+        }
       }
     }
 
-    if (!anyHits)
+    if (!anyHits) {
+      errorGuess = true;
       maxError -= 1;
-
-    return true;
+    }
   }
 };
 
