@@ -1,7 +1,8 @@
 ## Forca
 
-Nome: Gabriel Murakami Alves
-RA: 11071916
+**Nome: Gabriel Murakami Alves**
+
+**RA: 11071916**
 
 Essa aplicação utilizando a biblioteca ABCg simula o funcionamento de um jogo da forca.
 
