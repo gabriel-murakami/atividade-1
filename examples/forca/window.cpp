@@ -87,7 +87,7 @@ void Window::onPaintUI() {
         auto ch{getWord()[i]};
 
         if (ch != 0) {
-          if (!getRevealed()[i]) {
+          if (!getRevealed()[i] && m_gameState == GameState::Play) {
             ch = ' ';
           }
 
