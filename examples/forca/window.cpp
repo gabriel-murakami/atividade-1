@@ -1,6 +1,18 @@
 #include "window.hpp"
 #include <string>
 
+void AlignForWidth(float width, float alignment = 0.5f) {
+  ImGuiStyle& style = ImGui::GetStyle();
+  float avail = ImGui::GetContentRegionAvail().x;
+  float off = (avail - width) * alignment;
+  if (off > 0.0f)
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+}
+
+void CustomSpacing(float space) {
+  ImGui::Dummy(ImVec2(0.f, space));
+}
+
 void Window::onCreate() {
   auto const filename{abcg::Application::getAssetsPath() + "Roboto-Medium.ttf"};
 
@@ -57,10 +69,19 @@ void Window::onPaintUI() {
       ImGui::Spacing();
     }
 
-    ImGui::Spacing();
+    CustomSpacing(30.0);
 
     {
       ImGui::PushFont(m_font);
+      ImGuiStyle& style = ImGui::GetStyle();
+
+      if (getCurrentDifficult() == "Fácil") {
+        ImGui::SetCursorPosX((appWindowWidth - ((6 * (40 + style.ItemSpacing.x)) - style.ItemSpacing.x)) / 2);
+      } else if (getCurrentDifficult() == "Médio") {
+        ImGui::SetCursorPosX((appWindowWidth - ((8 * (40 + style.ItemSpacing.x)) - style.ItemSpacing.x)) / 2);
+      } else {
+        ImGui::SetCursorPosX((appWindowWidth - ((10 * (40 + style.ItemSpacing.x)) - style.ItemSpacing.x)) / 2);
+      }
 
       for (size_t i = 0; i < strlen(getWord()); i++) {
         auto ch{getWord()[i]};
@@ -77,12 +98,9 @@ void Window::onPaintUI() {
         }
       }
 
+      CustomSpacing(50.0);
       ImGui::PopFont();
     }
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
 
     if (m_gameState == GameState::Play) {
       char guess = '\0';
@@ -90,11 +108,21 @@ void Window::onPaintUI() {
       {
         if (!ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0))
           ImGui::SetKeyboardFocusHere(0);
+        ImGuiStyle& style = ImGui::GetStyle();
+
+        std::string guessInputText = "Palpite:";
+        ImGui::SetCursorPosX((appWindowWidth - ImGui::CalcTextSize(guessInputText.c_str()).x) / 2);
+        ImGui::Text("%s", guessInputText.c_str());
+
+        ImGui::SetCursorPosX((appWindowWidth - 40) / 2);
+        ImGui::PushItemWidth(40);
         if (ImGui::InputText("##Guess", &guess, 2, ImGuiInputTextFlags_EnterReturnsTrue)) {
           makeGuess(guess);
           checkEndCondition();
           guess = '\0';
         }
+
+        CustomSpacing(20.0);
 
         if (m_gameState == GameState::Play) {
           std::string tryText = "Palpites errados restantes: " + std::to_string(maxError);
@@ -103,9 +131,7 @@ void Window::onPaintUI() {
         }
 
         if (getErrorGuess()) {
-          ImGui::Spacing();
-          ImGui::Spacing();
-          ImGui::Spacing();
+          CustomSpacing(20.0);
 
           ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
           std::string text = "Palpite errado!";
@@ -116,9 +142,7 @@ void Window::onPaintUI() {
 
 
         if (getRepeatedGuess()) {
-          ImGui::Spacing();
-          ImGui::Spacing();
-          ImGui::Spacing();
+          CustomSpacing(20.0);
 
           ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 0, 255));
           std::string text = "Palpite repetido!";
@@ -129,9 +153,7 @@ void Window::onPaintUI() {
 
 
         if (!isalpha(getCurrentGuess()) && getCurrentGuess() != '\0') {
-          ImGui::Spacing();
-          ImGui::Spacing();
-          ImGui::Spacing();
+          CustomSpacing(20.0);
 
           ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 0, 255));
           std::string text = "O palpite deve ser uma letra!";
@@ -143,28 +165,29 @@ void Window::onPaintUI() {
     }
 
 
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
+    CustomSpacing(30.0);
 
     std::string text = "Começar uma nova partida:";
     ImGui::SetCursorPosX((appWindowWidth - ImGui::CalcTextSize(text.c_str()).x) / 2);
     ImGui::Text("%s", text.c_str());
 
-    if (ImGui::Button("Fácil", ImVec2((appWindowWidth / 3) - 5, 30))) {
+    auto maxWidth{(ImGui::CalcTextSize("Difícil").x) + 5};
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGui::SetCursorPosX((appWindowWidth - ((3 * (maxWidth + style.ItemSpacing.x)) - style.ItemSpacing.x)) / 2);
+
+    if (ImGui::Button("Fácil", ImVec2(maxWidth, 30))) {
       restartGame("Fácil");
     }
     ImGui::SameLine();
-    if (ImGui::Button("Médio", ImVec2((appWindowWidth / 3) - 5, 30))) {
+    if (ImGui::Button("Médio", ImVec2(maxWidth, 30))) {
       restartGame("Médio");
     }
     ImGui::SameLine();
-    if (ImGui::Button("Difícil", ImVec2((appWindowWidth / 3) - 5, 30))) {
+    if (ImGui::Button("Difícil", ImVec2(maxWidth, 30))) {
       restartGame("Difícil");
     }
     ImGui::SameLine();
-
-    ImGui::Spacing();
 
     ImGui::End();
   }
