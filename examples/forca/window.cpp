@@ -177,6 +177,18 @@ void Window::onPaintUI() {
       }
     }
 
+    {
+      CustomSpacing(20.0);
+
+      std::string text = "Palpites anteriores:";
+      ImGui::SetCursorPosX((appWindowWidth - ImGui::CalcTextSize(text.c_str()).x) / 2);
+      ImGui::Text("%s", text.c_str());
+
+      ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(235, 236, 93, 255));
+      ImGui::SetCursorPosX((appWindowWidth - ImGui::CalcTextSize(getGuessedString().c_str()).x) / 2);
+      ImGui::Text("%s", getGuessedString().c_str());
+      ImGui::PopStyleColor();
+    }
 
     CustomSpacing(30.0);
 

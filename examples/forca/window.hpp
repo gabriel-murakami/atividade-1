@@ -24,6 +24,8 @@ private:
 
   char* guessedChars = new char[100];
 
+  std::string guessed = "";
+
   char currentGuess = '\0';
   char repeatedGuess = false;
   char errorGuess = false;
@@ -39,6 +41,10 @@ public:
 
   char* getGuessed() {
     return guessedChars;
+  }
+
+  string getGuessedString() {
+    return guessed;
   }
 
   bool* getRevealed() {
@@ -87,15 +93,9 @@ public:
     currentGuess = '\0';
     repeatedGuess = false;
     errorGuess = false;
+    guessed = "";
 
     resetRevelead();
-    resetGuessed();
-  }
-
-  void resetGuessed() {
-    for (size_t i = 0; i < strlen(getGuessed()); i++) {
-      getGuessed()[i] = '\0';
-    }
   }
 
   void resetRevelead() {
@@ -118,18 +118,14 @@ public:
 
     currentGuess = guess;
 
-    for (size_t i = 0; i < strlen(getGuessed()); i++) {
-      if (getGuessed()[i] == guess) {
-        return;
-      }
-    }
+    // for (size_t i = 0; i < strlen(getGuessed()); i++) {
+    //   if (getGuessed()[i] == guess) {
+    //     return;
+    //   }
+    // }
 
-    for (size_t i = 0; i < strlen(getGuessed()); i++) {
-      if (getGuessed()[i] == '\0') {
-        guessedChars[i] = guess;
-        break;
-      }
-    }
+    guessed += toupper(guess);
+    guessed += ' ';
 
     for (size_t i = 0; i < strlen(m_word); i++) {
       if (m_word[i] == guess) {
