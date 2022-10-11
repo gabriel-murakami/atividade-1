@@ -1,6 +1,12 @@
 #include "window.hpp"
 #include <string>
 
+// void Window::onCreate() {}
+
+// void Window::onPaintUI() {
+//   ImGui::ShowDemoWindow();
+// }
+
 void AlignForWidth(float width, float alignment = 0.5f) {
   ImGuiStyle& style = ImGui::GetStyle();
   float avail = ImGui::GetContentRegionAvail().x;
@@ -93,7 +99,14 @@ void Window::onPaintUI() {
 
           auto buttonText{fmt::format("{}##{}", ch, 0)};
 
-          ImGui::Button(buttonText.c_str(), ImVec2(40, 40));
+          if (getRevealed()[i]) {
+            ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(65, 148, 65, 255));
+            ImGui::Button(buttonText.c_str(), ImVec2(40, 40));
+            ImGui::PopStyleColor(1);
+          } else {
+            ImGui::Button(buttonText.c_str(), ImVec2(40, 40));
+          }
+
           ImGui::SameLine();
         }
       }
