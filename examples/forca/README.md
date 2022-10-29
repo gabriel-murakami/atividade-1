@@ -4,6 +4,9 @@
 
 **RA: 11071916**
 
+Aplicação em WebAssembly:
+https://gabriel-murakami.github.io/atividades-comp-grafica/forca/forca
+
 Essa aplicação utilizando a biblioteca ABCg simula o funcionamento de um jogo da forca.
 
 - Ao iniciar o jogo escolhe uma palavra previamente definida na difuculdade fácil e monta a sua representação na tela.
